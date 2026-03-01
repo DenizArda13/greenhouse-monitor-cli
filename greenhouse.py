@@ -42,6 +42,10 @@ class GreenhouseCLI:
 
     def add_room(self, name: str, ideal_temp: float) -> None:
         """Add a new flower room with ideal temperature."""
+        if self.storage.get_room_by_name(name):
+            print(f"✗ Room '{name}' already exists.", file=sys.stderr)
+            return
+
         room = Room(
             id=str(uuid.uuid4())[:8],
             name=name,
@@ -49,14 +53,14 @@ class GreenhouseCLI:
             current_temp=None
         )
         self.storage.add_room(room)
-        print(f"✓ Added room '{name}' with ideal temperature {ideal_temp}°C (ID: {room.id})")
+        print(f"✓ Added room '{name}' with ideal temperature {ideal_temp}°C")
 
-    def update_temp(self, room_id: str, current_temp: float) -> None:
+    def update_temp(self, room_name: str, current_temp: float) -> None:
         """Update the current temperature of a room."""
-        room = self.storage.get_room_by_id(room_id)
+        room = self.storage.get_room_by_name(room_name)
 
         if not room:
-            print(f"✗ Room with ID '{room_id}' not found.", file=sys.stderr)
+            print(f"✗ Room '{room_name}' not found.", file=sys.stderr)
             return
 
         room.current_temp = current_temp
@@ -93,7 +97,6 @@ class GreenhouseCLI:
                 status = Colors.green(f"OK ({diff:+.1f}°C)")
 
             print(f"{room.name:<20} {room.ideal_temp:<12} {current:<12} {status}")
-            print(f"  ID: {room.id}")
 
             alert_msg = room.get_alert_message()
             if alert_msg:
@@ -101,18 +104,18 @@ class GreenhouseCLI:
 
         print("=" * 70 + "\n")
 
-    def remove_room(self, room_id: str) -> None:
-        """Remove a flower room by ID."""
-        room = self.storage.get_room_by_id(room_id)
+    def remove_room(self, room_name: str) -> None:
+        """Remove a flower room by name."""
+        room = self.storage.get_room_by_name(room_name)
 
         if not room:
-            print(f"✗ Room with ID '{room_id}' not found.", file=sys.stderr)
+            print(f"✗ Room '{room_name}' not found.", file=sys.stderr)
             return
 
-        if self.storage.remove_room(room_id):
-            print(f"✓ Removed room '{room.name}' (ID: {room_id})")
+        if self.storage.remove_room(room.id):
+            print(f"✓ Removed room '{room.name}'")
         else:
-            print(f"✗ Failed to remove room '{room_id}'.", file=sys.stderr)
+            print(f"✗ Failed to remove room '{room.name}'.", file=sys.stderr)
 
     def check_alerts(self) -> None:
         """Check all rooms for temperature alerts."""
@@ -170,7 +173,7 @@ def main():
 
     # update-temp command
     update_parser = subparsers.add_parser('update-temp', help='Update room temperature')
-    update_parser.add_argument('room_id', help='Room ID')
+    update_parser.add_argument('room_name', help='Room name')
     update_parser.add_argument('current_temp', type=float, help='Current temperature in Celsius')
 
     # list-rooms command
@@ -178,7 +181,7 @@ def main():
 
     # remove-room command
     remove_parser = subparsers.add_parser('remove-room', help='Remove a room')
-    remove_parser.add_argument('room_id', help='Room ID to remove')
+    remove_parser.add_argument('room_name', help='Room name to remove')
 
     # check-alerts command
     subparsers.add_parser('check-alerts', help='Check all rooms for temperature alerts')
@@ -191,11 +194,11 @@ def main():
     if args.command == 'add-room':
         cli.add_room(args.name, args.ideal_temp)
     elif args.command == 'update-temp':
-        cli.update_temp(args.room_id, args.current_temp)
+        cli.update_temp(args.room_name, args.current_temp)
     elif args.command == 'list-rooms':
         cli.list_rooms()
     elif args.command == 'remove-room':
-        cli.remove_room(args.room_id)
+        cli.remove_room(args.room_name)
     elif args.command == 'check-alerts':
         cli.check_alerts()
     elif args.command == 'status':

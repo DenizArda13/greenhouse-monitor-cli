@@ -42,6 +42,15 @@ class Storage:
                 return room
         return None
 
+    def get_room_by_name(self, name: str) -> Optional[Room]:
+        """Get a specific room by name (case-insensitive)."""
+        normalized_name = name.strip().lower()
+        rooms = self.get_all_rooms()
+        for room in rooms:
+            if room.name.strip().lower() == normalized_name:
+                return room
+        return None
+
     def add_room(self, room: Room) -> None:
         """Add a new room to storage."""
         data = self._load_data()

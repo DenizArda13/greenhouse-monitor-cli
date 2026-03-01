@@ -30,29 +30,29 @@ chmod +x greenhouse.py
 ### Add a Flower Room
 
 ```bash
-python greenhouse.py add-room <room_name> <ideal_temperature>
+python3 greenhouse.py add-room <room_name> <ideal_temperature>
 ```
 
 Example:
 ```bash
-python greenhouse.py add-room "Rose Room" 22.0
+python3 greenhouse.py add-room "Rose Room" 22.0
 ```
 
 ### Update Room Temperature
 
 ```bash
-python greenhouse.py update-temp <room_id> <current_temperature>
+python3 greenhouse.py update-temp <room_name> <current_temperature>
 ```
 
 Example:
 ```bash
-python greenhouse.py update-temp abc12345 25.5
+python3 greenhouse.py update-temp "Rose Room" 25.5
 ```
 
 ### List All Rooms
 
 ```bash
-python greenhouse.py list-rooms
+python3 greenhouse.py list-rooms
 ```
 
 This shows:
@@ -65,7 +65,7 @@ This shows:
 ### Check for Alerts
 
 ```bash
-python greenhouse.py check-alerts
+python3 greenhouse.py check-alerts
 ```
 
 Displays all rooms with temperature alerts (±5°C from ideal).
@@ -73,7 +73,7 @@ Displays all rooms with temperature alerts (±5°C from ideal).
 ### Show Quick Status
 
 ```bash
-python greenhouse.py status
+python3 greenhouse.py status
 ```
 
 Shows a summary of total rooms, rooms with readings, and active alerts.
@@ -81,19 +81,19 @@ Shows a summary of total rooms, rooms with readings, and active alerts.
 ### Remove a Room
 
 ```bash
-python greenhouse.py remove-room <room_id>
+python3 greenhouse.py remove-room <room_name>
 ```
 
 Example:
 ```bash
-python greenhouse.py remove-room abc12345
+python3 greenhouse.py remove-room "Rose Room"
 ```
 
 ### Get Help
 
 ```bash
-python greenhouse.py --help
-python greenhouse.py <command> --help
+python3 greenhouse.py --help
+python3 greenhouse.py <command> --help
 ```
 
 ## Test Commands
@@ -104,56 +104,52 @@ Here are commands to test the application:
 
 ```bash
 # Add multiple rooms
-python greenhouse.py add-room "Rose Room" 22.0
-python greenhouse.py add-room "Orchid Room" 24.5
-python greenhouse.py add-room "Tulip Room" 20.0
+python3 greenhouse.py add-room "Rose Room" 22.0
+python3 greenhouse.py add-room "Orchid Room" 24.5
+python3 greenhouse.py add-room "Tulip Room" 20.0
 
-# List rooms to see IDs
-python greenhouse.py list-rooms
+# List rooms
+python3 greenhouse.py list-rooms
 ```
 
 ### 2. Temperature Update Test
 
 ```bash
-# Get the room IDs from the list output, then update temperatures
-# Replace <room_id_1>, <room_id_2>, <room_id_3> with actual IDs
+# Update temperatures by room name
 
 # Normal temperature (should be OK)
-python greenhouse.py update-temp <room_id_1> 22.0
+python3 greenhouse.py update-temp "Rose Room" 22.0
 
 # Slightly above ideal (should be OK, within 5°C)
-python greenhouse.py update-temp <room_id_2> 26.0
+python3 greenhouse.py update-temp "Orchid Room" 26.0
 
 # Trigger alert (6°C above ideal)
-python greenhouse.py update-temp <room_id_3> 26.0
+python3 greenhouse.py update-temp "Tulip Room" 26.0
 ```
 
 ### 3. Alert System Test
 
 ```bash
 # Add a test room with ideal temp 20°C
-python greenhouse.py add-room "Alert Test Room" 20.0
+python3 greenhouse.py add-room "Alert Test Room" 20.0
 
-# Get the room ID
-python greenhouse.py list-rooms
-
-# Test various temperature scenarios (replace <test_room_id> with actual ID):
+# Test various temperature scenarios:
 
 # No alert - within range
-python greenhouse.py update-temp <test_room_id> 21.0
-python greenhouse.py check-alerts
+python3 greenhouse.py update-temp "Alert Test Room" 21.0
+python3 greenhouse.py check-alerts
 
 # Alert triggered - 5°C above (exactly at threshold)
-python greenhouse.py update-temp <test_room_id> 25.0
-python greenhouse.py check-alerts
+python3 greenhouse.py update-temp "Alert Test Room" 25.0
+python3 greenhouse.py check-alerts
 
 # Alert triggered - 6°C below
-python greenhouse.py update-temp <test_room_id> 14.0
-python greenhouse.py check-alerts
+python3 greenhouse.py update-temp "Alert Test Room" 14.0
+python3 greenhouse.py check-alerts
 
 # Back to normal
-python greenhouse.py update-temp <test_room_id> 20.0
-python greenhouse.py check-alerts
+python3 greenhouse.py update-temp "Alert Test Room" 20.0
+python3 greenhouse.py check-alerts
 ```
 
 ### 4. Full Workflow Test
@@ -163,49 +159,49 @@ python greenhouse.py check-alerts
 rm -f greenhouse_data.json
 
 # Add rooms
-python greenhouse.py add-room "Room A" 21.0
-python greenhouse.py add-room "Room B" 23.0
-python greenhouse.py add-room "Room C" 19.0
+python3 greenhouse.py add-room "Room A" 21.0
+python3 greenhouse.py add-room "Room B" 23.0
+python3 greenhouse.py add-room "Room C" 19.0
 
 # Check status
-python greenhouse.py status
+python3 greenhouse.py status
 
-# Get IDs and update temperatures
-python greenhouse.py list-rooms
-
-# (Replace IDs with actual values from list-rooms output)
-python greenhouse.py update-temp <room_a_id> 21.0
-python greenhouse.py update-temp <room_b_id> 29.0  # Should trigger alert
-python greenhouse.py update-temp <room_c_id> 13.0  # Should trigger alert
+# Update temperatures by room name
+python3 greenhouse.py update-temp "Room A" 21.0
+python3 greenhouse.py update-temp "Room B" 29.0  # Should trigger alert
+python3 greenhouse.py update-temp "Room C" 13.0  # Should trigger alert
 
 # Check all rooms
-python greenhouse.py list-rooms
-python greenhouse.py check-alerts
-python greenhouse.py status
+python3 greenhouse.py list-rooms
+python3 greenhouse.py check-alerts
+python3 greenhouse.py status
 
 # Clean up
-python greenhouse.py remove-room <room_a_id>
-python greenhouse.py list-rooms
+python3 greenhouse.py remove-room "Room A"
+python3 greenhouse.py list-rooms
 ```
 
 ### 5. Edge Case Tests
 
 ```bash
 # Test with decimal temperatures
-python greenhouse.py add-room "Precision Test" 22.5
-python greenhouse.py list-rooms
-# Get the ID
-python greenhouse.py update-temp <id> 27.5  # Exactly 5.0 difference
-python greenhouse.py check-alerts
+python3 greenhouse.py add-room "Precision Test" 22.5
+python3 greenhouse.py list-rooms
+python3 greenhouse.py update-temp "Precision Test" 27.5  # Exactly 5.0 difference
+python3 greenhouse.py check-alerts
 
 # Test room name with spaces (use quotes)
-python greenhouse.py add-room "North Wing Orchid Section" 24.0
-
-# Test error handling - invalid room ID
-python greenhouse.py update-temp invalid_id 25.0
+python3 greenhouse.py add-room "North Wing Orchid Section" 24.0
 
 # Test error handling - room not found
-python greenhouse.py remove-room nonexistent
+python3 greenhouse.py update-temp "Nonexistent Room" 25.0
+
+# Test duplicate room prevention
+python3 greenhouse.py add-room "Rose Room" 22.0
+python3 greenhouse.py add-room "Rose Room" 22.0  # Should fail
+
+# Test removal by name
+python3 greenhouse.py remove-room "North Wing Orchid Section"
 ```
 
 ## Data Storage
