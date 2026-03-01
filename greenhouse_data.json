@@ -1,0 +1,16 @@
+{
+  "rooms": [
+    {
+      "id": "50573dea",
+      "name": "Orchid Room",
+      "ideal_temp": 24.5,
+      "current_temp": null
+    },
+    {
+      "id": "7ddeda01",
+      "name": "Tulip Room",
+      "ideal_temp": 20.0,
+      "current_temp": 28.0
+    }
+  ]
+}
