@@ -4,19 +4,19 @@
       "id": "3f4cbd07",
       "name": "Rose Room",
       "ideal_temp": 22.0,
-      "current_temp": -5.0
+      "current_temp": -4.0
     },
     {
       "id": "27976141",
       "name": "Orchid Room",
       "ideal_temp": 24.5,
-      "current_temp": 25.8
+      "current_temp": 13.8
     },
     {
       "id": "d7dafe13",
       "name": "Tulip Room",
       "ideal_temp": 20.0,
-      "current_temp": 21.0
+      "current_temp": 10.0
     }
   ]
 }
