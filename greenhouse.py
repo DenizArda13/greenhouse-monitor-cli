@@ -181,8 +181,11 @@ class GreenhouseCLI:
 
         self.monitoring = True
 
+        # Store interval for display
+        display_interval = interval
+
         print("🖥️  Live Monitor Started")
-        print(f"⏱️  Refresh interval: {interval} seconds")
+        print(f"⏱️  Refresh interval: {display_interval} seconds")
         print("🛑 Press Ctrl+C to stop\n")
 
         # Give user time to read the message before clearing screen
@@ -237,15 +240,18 @@ class GreenhouseCLI:
                     print(Colors.red(f"  → {alert_msg}"))
 
             print("-" * 70)
-            print(f"🔄 Refreshing every {interval}s | Press Ctrl+C to exit")
+            print(f"🔄 Refreshing every {display_interval}s | Press Ctrl+C to exit")
 
             # Wait for next refresh
             try:
                 time.sleep(interval)
             except KeyboardInterrupt:
                 self.monitoring = False
+                break
 
-        print("\n✅ Live monitor stopped.")
+        # Clear the line to remove any ^C characters
+        print("\r" + " " * 50 + "\r", end="")
+        print("✅ Live monitor stopped.")
 
 
 def main():
