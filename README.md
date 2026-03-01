@@ -10,6 +10,8 @@ A Python CLI application to track temperatures in flower rooms of a greenhouse. 
 - List all rooms with their status
 - Quick status overview
 - Remove rooms
+- **Mock temperature server** that simulates real-time temperature changes
+- **Live monitor** with continuous updates and real-time alerts
 
 ## Installation
 
@@ -21,8 +23,9 @@ A Python CLI application to track temperatures in flower rooms of a greenhouse. 
 ```bash
 # No external dependencies required - uses Python standard library only
 
-# Make the script executable (optional)
+# Make the scripts executable (optional)
 chmod +x greenhouse.py
+chmod +x mock_server.py
 ```
 
 ## Usage
@@ -89,11 +92,50 @@ Example:
 python3 greenhouse.py remove-room "Rose Room"
 ```
 
+### Live Monitor
+
+Continuously monitor all rooms with real-time updates. The screen refreshes every few seconds showing current temperatures and alerts.
+
+```bash
+python3 greenhouse.py monitor
+```
+
+With custom refresh interval (default is 2 seconds):
+```bash
+python3 greenhouse.py monitor --interval 3
+# or
+python3 greenhouse.py monitor -i 1
+```
+
+Press `Ctrl+C` to stop the monitor.
+
+### Mock Temperature Server
+
+Run a mock server that automatically generates temperature changes for all rooms every 2 seconds. Temperature changes by -1, 0, or +1 degree Celsius randomly.
+
+```bash
+# Terminal 1: Start the mock server
+python3 mock_server.py
+
+# Terminal 2: In another terminal, monitor the changes
+python3 greenhouse.py monitor
+```
+
+With custom update interval:
+```bash
+python3 mock_server.py --interval 3
+# or
+python3 mock_server.py -i 1
+```
+
+Press `Ctrl+C` to stop the server.
+
 ### Get Help
 
 ```bash
 python3 greenhouse.py --help
 python3 greenhouse.py <command> --help
+python3 mock_server.py --help
 ```
 
 ## Test Commands
@@ -152,7 +194,50 @@ python3 greenhouse.py update-temp "Alert Test Room" 20.0
 python3 greenhouse.py check-alerts
 ```
 
-### 4. Full Workflow Test
+### 4. Live Monitor Test
+
+```bash
+# Add some rooms first
+python3 greenhouse.py add-room "Live Test A" 22.0
+python3 greenhouse.py add-room "Live Test B" 25.0
+
+# Set initial temperatures
+python3 greenhouse.py update-temp "Live Test A" 22.0
+python3 greenhouse.py update-temp "Live Test B" 25.0
+
+# Start the live monitor (press Ctrl+C to stop)
+python3 greenhouse.py monitor
+
+# Or with custom refresh interval
+python3 greenhouse.py monitor --interval 1
+```
+
+### 5. Mock Server Test (Full Simulation)
+
+Open two terminals:
+
+**Terminal 1 - Start the mock server:**
+```bash
+# Clean up and setup
+rm -f greenhouse_data.json
+python3 greenhouse.py add-room "Rose Room" 22.0
+python3 greenhouse.py add-room "Orchid Room" 24.5
+python3 greenhouse.py add-room "Tulip Room" 20.0
+
+# Start the mock temperature server
+python3 mock_server.py
+```
+
+**Terminal 2 - Monitor in real-time:**
+```bash
+# Watch the temperatures change automatically
+python3 greenhouse.py monitor
+
+# Or check alerts periodically
+python3 greenhouse.py check-alerts
+```
+
+### 6. Full Workflow Test
 
 ```bash
 # Clean up any existing data
@@ -181,7 +266,7 @@ python3 greenhouse.py remove-room "Room A"
 python3 greenhouse.py list-rooms
 ```
 
-### 5. Edge Case Tests
+### 7. Edge Case Tests
 
 ```bash
 # Test with decimal temperatures
@@ -218,10 +303,34 @@ The default alert threshold is **5°C**. An alert is triggered when:
 
 ```
 greenhouse-monitor-cli/
-├── greenhouse.py    # Main CLI application
-├── models.py        # Room data model
-├── storage.py       # JSON storage handler
-├── README.md        # This file
+├── greenhouse.py      # Main CLI application
+├── mock_server.py     # Mock temperature server
+├── models.py          # Room data model
+├── storage.py         # JSON storage handler
+├── README.md          # This file
 └── greenhouse_data.json  # Data file (created automatically)
 ```
+
+## How It Works
+
+### Mock Server
+The `mock_server.py` script simulates a real IoT temperature sensor system:
+- Reads all rooms from storage
+- Every 2 seconds, randomly changes each room's temperature by -1, 0, or +1°C
+- Saves updated temperatures back to storage
+- Displays changes and alerts in real-time
+
+### Live Monitor
+The `monitor` command provides a dashboard-like experience:
+- Clears the screen and displays current status
+- Refreshes at specified intervals (default 2 seconds)
+- Shows room names, ideal temps, current temps, and status
+- Highlights alerts in red with warning symbols
+- Press Ctrl+C to exit
+
+### Typical Workflow
+1. Add rooms with ideal temperatures using `add-room`
+2. Start the mock server in one terminal: `python3 mock_server.py`
+3. Start the live monitor in another terminal: `python3 greenhouse.py monitor`
+4. Watch temperatures change and alerts trigger automatically!
 

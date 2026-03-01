@@ -2,7 +2,10 @@
 """Greenhouse Monitor CLI - Track temperatures in flower rooms."""
 
 import argparse
+import os
+import signal
 import sys
+import time
 import uuid
 from typing import Optional, List
 from models import Room
@@ -16,6 +19,7 @@ class Colors:
     YELLOW = '\033[93m'
     BOLD = '\033[1m'
     END = '\033[0m'
+    CLEAR = '\033[2J\033[H'  # Clear screen and move cursor to top
 
     @classmethod
     def red(cls, text: str) -> str:
@@ -39,6 +43,7 @@ class GreenhouseCLI:
 
     def __init__(self):
         self.storage = Storage()
+        self.monitoring = False
 
     def add_room(self, name: str, ideal_temp: float) -> None:
         """Add a new flower room with ideal temperature."""
@@ -156,6 +161,92 @@ class GreenhouseCLI:
 
         print()
 
+    def _signal_handler(self, signum, frame):
+        """Handle shutdown signals gracefully."""
+        self.monitoring = False
+
+    def monitor(self, interval: float = 2.0) -> None:
+        """Continuously monitor all rooms in a live loop.
+
+        Args:
+            interval: Refresh interval in seconds
+        """
+        # Setup signal handler for graceful shutdown
+        signal.signal(signal.SIGINT, self._signal_handler)
+
+        rooms = self.storage.get_all_rooms()
+        if not rooms:
+            print("No rooms configured. Use 'add-room' to add rooms first.")
+            return
+
+        self.monitoring = True
+
+        print("🖥️  Live Monitor Started")
+        print(f"⏱️  Refresh interval: {interval} seconds")
+        print("🛑 Press Ctrl+C to stop\n")
+
+        # Give user time to read the message before clearing screen
+        time.sleep(1)
+
+        while self.monitoring:
+            # Clear screen
+            os.system('clear' if os.name == 'posix' else 'cls')
+
+            # Get fresh data
+            rooms = self.storage.get_all_rooms()
+            timestamp = time.strftime("%H:%M:%S")
+
+            # Header
+            print(Colors.CLEAR, end="")
+            print("=" * 70)
+            print(f"🌡️  GREENHOUSE LIVE MONITOR - {timestamp}")
+            print("=" * 70)
+            print()
+
+            # Status summary
+            total_rooms = len(rooms)
+            rooms_with_reading = sum(1 for r in rooms if r.current_temp is not None)
+            alert_count = sum(1 for r in rooms if r.is_alert_triggered())
+
+            print(f"Total Rooms: {total_rooms} | With Readings: {rooms_with_reading}", end="")
+            if alert_count > 0:
+                print(f" | {Colors.bold_red(f'ALERTS: {alert_count}')}")
+            else:
+                print(f" | {Colors.green('All OK')}")
+            print("-" * 70)
+
+            # Room details
+            for room in rooms:
+                current = f"{room.current_temp}°C" if room.current_temp is not None else "N/A"
+
+                if room.is_alert_triggered():
+                    status = Colors.red("⚠ ALERT")
+                    alert_indicator = " 🚨"
+                elif room.current_temp is None:
+                    status = Colors.yellow("No reading")
+                    alert_indicator = ""
+                else:
+                    diff = room.get_temp_difference()
+                    status = Colors.green(f"OK ({diff:+.1f}°C)")
+                    alert_indicator = ""
+
+                print(f"{room.name:<20} Ideal: {room.ideal_temp:<6} Current: {current:<8} {status}{alert_indicator}")
+
+                alert_msg = room.get_alert_message()
+                if alert_msg:
+                    print(Colors.red(f"  → {alert_msg}"))
+
+            print("-" * 70)
+            print(f"🔄 Refreshing every {interval}s | Press Ctrl+C to exit")
+
+            # Wait for next refresh
+            try:
+                time.sleep(interval)
+            except KeyboardInterrupt:
+                self.monitoring = False
+
+        print("\n✅ Live monitor stopped.")
+
 
 def main():
     """Main entry point for the CLI."""
@@ -189,6 +280,15 @@ def main():
     # status command
     subparsers.add_parser('status', help='Show quick status overview')
 
+    # monitor command
+    monitor_parser = subparsers.add_parser('monitor', help='Live monitor with continuous updates')
+    monitor_parser.add_argument(
+        '--interval', '-i',
+        type=float,
+        default=2.0,
+        help='Refresh interval in seconds (default: 2.0)'
+    )
+
     args = parser.parse_args()
 
     if args.command == 'add-room':
@@ -203,6 +303,8 @@ def main():
         cli.check_alerts()
     elif args.command == 'status':
         cli.status()
+    elif args.command == 'monitor':
+        cli.monitor(args.interval)
     else:
         parser.print_help()
 
