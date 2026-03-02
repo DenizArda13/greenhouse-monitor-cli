@@ -4,6 +4,7 @@ A Python CLI application to track temperatures in flower rooms of a greenhouse. 
 
 ## Features
 
+- **Interactive Setup** - Easy room configuration with guided menu
 - Add flower rooms with ideal temperature settings
 - Update current temperature readings for each room
 - Automatic alerts when temperature deviates ±5°C from ideal
@@ -29,6 +30,41 @@ chmod +x mock_server.py
 ```
 
 ## Usage
+
+### Interactive Setup (Recommended)
+
+The easiest way to configure your greenhouse is using the interactive setup command. It provides a guided menu to select rooms and set ideal temperatures.
+
+```bash
+python3 greenhouse.py setup
+```
+
+This will:
+1. Display 10 available rooms with their plant types
+2. Let you select rooms by number (1-10)
+3. Prompt for ideal temperature for each selected room
+4. Save configuration and automatically start monitoring
+
+**Available Rooms:**
+| Room | Plant |
+|------|-------|
+| Room 1 | Roses |
+| Room 2 | Orchids |
+| Room 3 | Tulips |
+| Room 4 | Sunflowers |
+| Room 5 | Lilies |
+| Room 6 | Carnations |
+| Room 7 | Daisies |
+| Room 8 | Hydrangeas |
+| Room 9 | Lavenders |
+| Room 10 | Jasmine |
+
+**Interactive Commands:**
+- Enter a number (1-10) to select a room
+- Type `list` to see currently configured rooms
+- Type `done` or `0` to finish setup and start monitoring
+
+**Note:** Running setup again will replace all existing room configuration.
 
 ### Add a Flower Room
 
@@ -289,6 +325,66 @@ python3 greenhouse.py add-room "Rose Room" 22.0  # Should fail
 python3 greenhouse.py remove-room "North Wing Orchid Section"
 ```
 
+### 8. Interactive Setup Test
+
+```bash
+# Start interactive setup
+python3 greenhouse.py setup
+
+# Follow the prompts:
+# 1. Select room by entering a number (1-10)
+# 2. Enter ideal temperature when prompted
+# 3. Repeat for additional rooms
+# 4. Type 'done' when finished
+# 5. Monitoring will start automatically
+
+# Example flow:
+# Select room (1-10) or 'done': 1
+#    Enter ideal temperature for Room 1 (Roses): 22.0
+#    ✓ Added Room 1 (Roses) with ideal temp 22.0°C
+# 
+# Select room (1-10) or 'done': 3
+#    Enter ideal temperature for Room 3 (Tulips): 20.5
+#    ✓ Added Room 3 (Tulips) with ideal temp 20.5°C
+#
+# Select room (1-10) or 'done': list
+# 📋 Configured rooms:
+#    • Room 1 (Roses): 22.0°C
+#    • Room 3 (Tulips): 20.5°C
+#
+# Select room (1-10) or 'done': done
+
+# Verify the configuration was saved
+python3 greenhouse.py list-rooms
+
+# Test that running setup again replaces existing rooms
+python3 greenhouse.py setup
+# Select different rooms and verify old ones are replaced
+```
+
+### 9. Interactive Setup with Mock Server Test
+
+Open two terminals:
+
+**Terminal 1 - Run interactive setup and start mock server:**
+```bash
+# Clean up any existing data
+rm -f greenhouse_data.json
+
+# Run interactive setup
+python3 greenhouse.py setup
+# Select rooms and temperatures, then press Ctrl+C when monitoring starts
+
+# Start the mock temperature server
+python3 mock_server.py
+```
+
+**Terminal 2 - Monitor in real-time:**
+```bash
+# Watch the temperatures change automatically
+python3 greenhouse.py monitor
+```
+
 ## Data Storage
 
 Room data is stored in `greenhouse_data.json` in the current directory. This file is created automatically when you add your first room.
@@ -329,6 +425,15 @@ The `monitor` command provides a dashboard-like experience:
 - Press Ctrl+C to exit
 
 ### Typical Workflow
+
+**Option 1: Using Interactive Setup (Recommended)**
+1. Run interactive setup: `python3 greenhouse.py setup`
+2. Select rooms and set ideal temperatures
+3. Monitoring starts automatically after setup
+4. In another terminal, start the mock server: `python3 mock_server.py`
+5. Watch temperatures change and alerts trigger automatically!
+
+**Option 2: Manual Setup**
 1. Add rooms with ideal temperatures using `add-room`
 2. Start the mock server in one terminal: `python3 mock_server.py`
 3. Start the live monitor in another terminal: `python3 greenhouse.py monitor`

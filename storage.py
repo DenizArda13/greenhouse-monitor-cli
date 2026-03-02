@@ -76,3 +76,7 @@ class Storage:
             self._save_data(data)
             return True
         return False
+
+    def clear_all_rooms(self) -> None:
+        """Clear all rooms from storage."""
+        self._save_data({"rooms": []})

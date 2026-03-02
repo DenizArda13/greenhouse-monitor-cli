@@ -149,10 +149,13 @@ class GreenhouseCLI:
             print("\n⚠ No rooms configured. Exiting setup.\n")
             return
 
-        # Save configured rooms to storage
+        # Clear existing rooms and save new configuration
         print("\n" + "=" * 60)
         print("💾 Saving configuration...")
         print("=" * 60 + "\n")
+
+        # Clear all existing rooms first
+        self.storage.clear_all_rooms()
 
         for room_data in configured_rooms:
             room = Room(
