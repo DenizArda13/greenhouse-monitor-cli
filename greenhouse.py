@@ -138,7 +138,7 @@ class GreenhouseCLI:
                     'plant': selected_room['plant'],
                     'ideal_temp': ideal_temp
                 })
-                print(f"   ✓ Added {selected_room['name']} ({selected_room['plant']}) with ideal temp {ideal_temp}°C\n")
+                print(f"   ✓ Selected {selected_room['name']} ({selected_room['plant']}) with ideal temp {ideal_temp}°C\n")
 
             except KeyboardInterrupt:
                 print("\n\n⚠ Setup cancelled.")
@@ -149,24 +149,42 @@ class GreenhouseCLI:
             print("\n⚠ No rooms configured. Exiting setup.\n")
             return
 
-        # Clear existing rooms and save new configuration
+        # Save configuration while preserving existing rooms and their temperatures
         print("\n" + "=" * 60)
         print("💾 Saving configuration...")
         print("=" * 60 + "\n")
 
-        # Clear all existing rooms first
-        self.storage.clear_all_rooms()
+        # Get existing rooms to preserve their current temperatures
+        existing_rooms = {r.name: r for r in self.storage.get_all_rooms()}
 
         for room_data in configured_rooms:
-            room = Room(
-                id=str(uuid.uuid4())[:8],
-                name=room_data['name'],
-                ideal_temp=room_data['ideal_temp'],
-                plant_name=room_data['plant'],
-                current_temp=None
-            )
-            self.storage.add_room(room)
-            print(f"   ✓ Saved {room.name} ({room.plant_name}): {room.ideal_temp}°C")
+            room_name = room_data['name']
+            
+            if room_name in existing_rooms:
+                # Update existing room - preserve current_temp, update ideal_temp
+                existing_room = existing_rooms[room_name]
+                existing_room.ideal_temp = room_data['ideal_temp']
+                self.storage.update_room(existing_room)
+                print(f"   ✓ Updated {existing_room.name} ({existing_room.plant_name}): ideal temp {existing_room.ideal_temp}°C, current temp {existing_room.current_temp}°C")
+            else:
+                # Add new room
+                room = Room(
+                    id=str(uuid.uuid4())[:8],
+                    name=room_data['name'],
+                    ideal_temp=room_data['ideal_temp'],
+                    plant_name=room_data['plant'],
+                    current_temp=None
+                )
+                self.storage.add_room(room)
+                print(f"   ✓ Added {room.name} ({room.plant_name}): {room.ideal_temp}°C")
+
+        # Show preserved rooms that weren't in this setup
+        preserved_rooms = [r for name, r in existing_rooms.items() if name not in [cr['name'] for cr in configured_rooms]]
+        if preserved_rooms:
+            print("\n   📋 Preserved rooms (not modified):")
+            for room in preserved_rooms:
+                current = f"{room.current_temp}°C" if room.current_temp is not None else "N/A"
+                print(f"      • {room.name} ({room.plant_name}): ideal {room.ideal_temp}°C, current {current}")
 
         print("\n" + "=" * 60)
         print("🚀 Setup complete! Starting monitoring...")

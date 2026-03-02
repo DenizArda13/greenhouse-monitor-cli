@@ -1,17 +1,24 @@
 {
   "rooms": [
     {
-      "id": "fc0361d9",
+      "id": "abc123",
       "name": "Room 1",
-      "ideal_temp": 22.0,
+      "ideal_temp": 20.0,
       "plant_name": "Roses",
-      "current_temp": null
+      "current_temp": 22.5
     },
     {
-      "id": "d3c53a07",
+      "id": "def456",
       "name": "Room 5",
-      "ideal_temp": 25.0,
+      "ideal_temp": 24.0,
       "plant_name": "Lilies",
+      "current_temp": 23.0
+    },
+    {
+      "id": "39ec8bc0",
+      "name": "Room 3",
+      "ideal_temp": 21.0,
+      "plant_name": "Tulips",
       "current_temp": null
     }
   ]
