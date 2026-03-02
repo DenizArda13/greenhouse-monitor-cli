@@ -7,9 +7,24 @@ import signal
 import sys
 import time
 import uuid
-from typing import Optional, List
+from typing import Optional, List, Dict
 from models import Room
 from storage import Storage
+
+
+# Predefined rooms with different plant names
+PREDEFINED_ROOMS: List[Dict[str, str]] = [
+    {"name": "Room 1", "plant": "Roses"},
+    {"name": "Room 2", "plant": "Orchids"},
+    {"name": "Room 3", "plant": "Tulips"},
+    {"name": "Room 4", "plant": "Sunflowers"},
+    {"name": "Room 5", "plant": "Lilies"},
+    {"name": "Room 6", "plant": "Carnations"},
+    {"name": "Room 7", "plant": "Daisies"},
+    {"name": "Room 8", "plant": "Hydrangeas"},
+    {"name": "Room 9", "plant": "Lavenders"},
+    {"name": "Room 10", "plant": "Jasmine"},
+]
 
 
 class Colors:
@@ -44,6 +59,118 @@ class GreenhouseCLI:
     def __init__(self):
         self.storage = Storage()
         self.monitoring = False
+
+    def interactive_setup(self) -> None:
+        """Interactive CLI menu to setup rooms and start monitoring."""
+        print("\n" + "=" * 60)
+        print("🌱 GREENHOUSE MONITOR - Interactive Setup")
+        print("=" * 60)
+        print("\nWelcome! Let's set up your greenhouse rooms.\n")
+        print("Available rooms with their plants:\n")
+
+        # Display available rooms
+        for i, room in enumerate(PREDEFINED_ROOMS, 1):
+            print(f"  {i:2}. {room['name']:<10} - {room['plant']}")
+
+        print("\n" + "-" * 60)
+        print("Instructions:")
+        print("  - Select rooms by number (one at a time)")
+        print("  - Enter the ideal temperature for each selected room")
+        print("  - Enter '0' or 'done' when finished")
+        print("  - Enter 'list' to see configured rooms")
+        print("-" * 60 + "\n")
+
+        configured_rooms = []
+
+        while True:
+            try:
+                user_input = input("Select room (1-10) or 'done': ").strip().lower()
+
+                # Check for completion commands
+                if user_input in ['0', 'done', 'exit', 'q', 'quit']:
+                    break
+
+                # Check for list command
+                if user_input == 'list':
+                    if configured_rooms:
+                        print("\n📋 Configured rooms:")
+                        for room in configured_rooms:
+                            print(f"   • {room['name']} ({room['plant']}): {room['ideal_temp']}°C")
+                        print()
+                    else:
+                        print("   No rooms configured yet.\n")
+                    continue
+
+                # Parse room selection
+                try:
+                    room_idx = int(user_input) - 1
+                except ValueError:
+                    print("   ⚠ Invalid input. Please enter a number 1-10, 'list', or 'done'.\n")
+                    continue
+
+                # Validate room index
+                if room_idx < 0 or room_idx >= len(PREDEFINED_ROOMS):
+                    print("   ⚠ Invalid room number. Please select 1-10.\n")
+                    continue
+
+                selected_room = PREDEFINED_ROOMS[room_idx]
+
+                # Check if already configured
+                if any(r['name'] == selected_room['name'] for r in configured_rooms):
+                    print(f"   ⚠ {selected_room['name']} is already configured.\n")
+                    continue
+
+                # Get ideal temperature
+                while True:
+                    temp_input = input(f"   Enter ideal temperature for {selected_room['name']} ({selected_room['plant']}): ").strip()
+                    try:
+                        ideal_temp = float(temp_input)
+                        if ideal_temp < -50 or ideal_temp > 100:
+                            print("   ⚠ Temperature seems unrealistic. Please enter a value between -50 and 100.")
+                            continue
+                        break
+                    except ValueError:
+                        print("   ⚠ Invalid temperature. Please enter a number (e.g., 22.5).")
+
+                # Add to configured rooms
+                configured_rooms.append({
+                    'name': selected_room['name'],
+                    'plant': selected_room['plant'],
+                    'ideal_temp': ideal_temp
+                })
+                print(f"   ✓ Added {selected_room['name']} ({selected_room['plant']}) with ideal temp {ideal_temp}°C\n")
+
+            except KeyboardInterrupt:
+                print("\n\n⚠ Setup cancelled.")
+                return
+
+        # Check if any rooms were configured
+        if not configured_rooms:
+            print("\n⚠ No rooms configured. Exiting setup.\n")
+            return
+
+        # Save configured rooms to storage
+        print("\n" + "=" * 60)
+        print("💾 Saving configuration...")
+        print("=" * 60 + "\n")
+
+        for room_data in configured_rooms:
+            room = Room(
+                id=str(uuid.uuid4())[:8],
+                name=room_data['name'],
+                ideal_temp=room_data['ideal_temp'],
+                plant_name=room_data['plant'],
+                current_temp=None
+            )
+            self.storage.add_room(room)
+            print(f"   ✓ Saved {room.name} ({room.plant_name}): {room.ideal_temp}°C")
+
+        print("\n" + "=" * 60)
+        print("🚀 Setup complete! Starting monitoring...")
+        print("=" * 60 + "\n")
+
+        # Start monitoring
+        self.monitor()
 
     def add_room(self, name: str, ideal_temp: float) -> None:
         """Add a new flower room with ideal temperature."""
@@ -83,15 +210,16 @@ class GreenhouseCLI:
         rooms = self.storage.get_all_rooms()
 
         if not rooms:
-            print("No rooms configured. Use 'add-room' to add a room.")
+            print("No rooms configured. Use 'setup' for interactive setup or 'add-room' to add a room.")
             return
 
-        print("\n" + "=" * 70)
-        print(f"{'Room':<20} {'Ideal Temp':<12} {'Current':<12} {'Status':<20}")
-        print("=" * 70)
+        print("\n" + "=" * 80)
+        print(f"{'Room':<15} {'Plant':<12} {'Ideal Temp':<12} {'Current':<12} {'Status':<20}")
+        print("=" * 80)
 
         for room in rooms:
             current = f"{room.current_temp}°C" if room.current_temp is not None else "N/A"
+            plant = room.plant_name if room.plant_name else "N/A"
 
             if room.is_alert_triggered():
                 status = Colors.red("⚠ ALERT")
@@ -101,13 +229,13 @@ class GreenhouseCLI:
                 diff = room.get_temp_difference()
                 status = Colors.green(f"OK ({diff:+.1f}°C)")
 
-            print(f"{room.name:<20} {room.ideal_temp:<12} {current:<12} {status}")
+            print(f"{room.name:<15} {plant:<12} {room.ideal_temp:<12} {current:<12} {status}")
 
             alert_msg = room.get_alert_message()
             if alert_msg:
                 print(Colors.red(f"  → {alert_msg}"))
 
-        print("=" * 70 + "\n")
+        print("=" * 80 + "\n")
 
     def remove_room(self, room_name: str) -> None:
         """Remove a flower room by name."""
@@ -221,6 +349,7 @@ class GreenhouseCLI:
             # Room details
             for room in rooms:
                 current = f"{room.current_temp}°C" if room.current_temp is not None else "N/A"
+                plant = room.plant_name if room.plant_name else "N/A"
 
                 if room.is_alert_triggered():
                     status = Colors.red("⚠ ALERT")
@@ -233,7 +362,7 @@ class GreenhouseCLI:
                     status = Colors.green(f"OK ({diff:+.1f}°C)")
                     alert_indicator = ""
 
-                print(f"{room.name:<20} Ideal: {room.ideal_temp:<6} Current: {current:<8} {status}{alert_indicator}")
+                print(f"{room.name:<15} [{plant:<10}] Ideal: {room.ideal_temp:<6} Current: {current:<8} {status}{alert_indicator}")
 
                 alert_msg = room.get_alert_message()
                 if alert_msg:
@@ -286,6 +415,9 @@ def main():
     # status command
     subparsers.add_parser('status', help='Show quick status overview')
 
+    # setup command - interactive room configuration
+    subparsers.add_parser('setup', help='Interactive setup to configure rooms and start monitoring')
+
     # monitor command
     monitor_parser = subparsers.add_parser('monitor', help='Live monitor with continuous updates')
     monitor_parser.add_argument(
@@ -309,6 +441,8 @@ def main():
         cli.check_alerts()
     elif args.command == 'status':
         cli.status()
+    elif args.command == 'setup':
+        cli.interactive_setup()
     elif args.command == 'monitor':
         cli.monitor(args.interval)
     else:

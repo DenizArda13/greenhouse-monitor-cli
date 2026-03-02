@@ -1,22 +1,18 @@
 {
   "rooms": [
     {
-      "id": "3f4cbd07",
-      "name": "Rose Room",
-      "ideal_temp": 22.0,
-      "current_temp": -4.0
+      "id": "5b48c7c1",
+      "name": "Room 1",
+      "ideal_temp": 22.5,
+      "plant_name": "Roses",
+      "current_temp": 21.7
     },
     {
-      "id": "27976141",
-      "name": "Orchid Room",
-      "ideal_temp": 24.5,
-      "current_temp": 13.8
-    },
-    {
-      "id": "d7dafe13",
-      "name": "Tulip Room",
-      "ideal_temp": 20.0,
-      "current_temp": 10.0
+      "id": "2f433630",
+      "name": "Room 2",
+      "ideal_temp": 24.0,
+      "plant_name": "Orchids",
+      "current_temp": 23.4
     }
   ]
 }

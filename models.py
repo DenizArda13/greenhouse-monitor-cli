@@ -9,6 +9,7 @@ class Room:
     id: str
     name: str
     ideal_temp: float
+    plant_name: str = ""
     current_temp: Optional[float] = None
 
     def to_dict(self) -> dict:
