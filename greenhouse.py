@@ -367,27 +367,53 @@ class GreenhouseCLI:
                 print(f" | {Colors.green('All OK')}")
             print("-" * 70)
 
-            # Room details
-            for room in rooms:
+            # Room details - Table header
+            print(f"{'No.':<5} {'Room':<10} {'Plant':<12} {'Ideal':<8} {'Current':<10} {'Status':<20}")
+            print("-" * 70)
+
+            # Sort rooms by room number for consistent display
+            def get_room_number(room):
+                try:
+                    return int(room.name.replace("Room ", ""))
+                except (ValueError, AttributeError):
+                    return 999
+
+            sorted_rooms = sorted(rooms, key=get_room_number)
+
+            for room in sorted_rooms:
                 current = f"{room.current_temp}°C" if room.current_temp is not None else "N/A"
                 plant = room.plant_name if room.plant_name else "N/A"
 
+                # Get room number
+                try:
+                    room_num = int(room.name.replace("Room ", ""))
+                except (ValueError, AttributeError):
+                    room_num = "-"
+
+                # Status column with alert message
                 if room.is_alert_triggered():
-                    status = Colors.red("⚠ ALERT")
-                    alert_indicator = " 🚨"
+                    alert_msg = room.get_alert_message()
+                    if alert_msg:
+                        if "ABOVE" in alert_msg:
+                            status = Colors.red("🔥 ALERT: Too Hot!")
+                        elif "BELOW" in alert_msg:
+                            status = Colors.red("❄️ ALERT: Too Cold!")
+                        else:
+                            status = Colors.red("⚠️ ALERT")
+                    else:
+                        status = Colors.red("⚠️ ALERT")
                 elif room.current_temp is None:
-                    status = Colors.yellow("No reading")
-                    alert_indicator = ""
+                    status = Colors.yellow("⏳ No reading")
                 else:
                     diff = room.get_temp_difference()
-                    status = Colors.green(f"OK ({diff:+.1f}°C)")
-                    alert_indicator = ""
+                    if abs(diff) < 1.0:
+                        status = Colors.green(f"✅ Perfect")
+                    elif diff > 0:
+                        status = Colors.green(f"✅ OK (+{diff:.1f}°C)")
+                    else:
+                        status = Colors.green(f"✅ OK ({diff:.1f}°C)")
 
-                print(f"{room.name:<15} [{plant:<10}] Ideal: {room.ideal_temp:<6} Current: {current:<8} {status}{alert_indicator}")
-
-                alert_msg = room.get_alert_message()
-                if alert_msg:
-                    print(Colors.red(f"  → {alert_msg}"))
+                print(f"{room_num:<5} {room.name:<10} {plant:<12} {room.ideal_temp:<8} {current:<10} {status}")
 
             print("-" * 70)
             print(f"🔄 Refreshing every {display_interval}s | Press Ctrl+C to exit")
